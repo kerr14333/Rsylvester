@@ -51,6 +51,6 @@ Qc <- Q + 1i * matrix(rnorm(6), 3, 2)
 Xc <- solve_sylvester(Ac, B, Qc)
 max(Mod(Ac \%*\% Xc + Xc \%*\% B - Qc))   # ~ 0
 }
-\author{cyg}
+\author{Christopher Grieves}
 \keyword{algebra}
 \keyword{array}

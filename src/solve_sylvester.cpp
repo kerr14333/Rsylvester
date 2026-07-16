@@ -6,18 +6,19 @@
 // scipy.linalg.solve_sylvester solves the same equation via the
 // Bartels-Stewart algorithm (Schur decomposition + LAPACK *trsyl).
 //
-// Real case: Armadillo's syl(A, B, C) solves  A X + X B + C = 0, i.e.
+// Real case: Armadillo's sylvester(A, B, C) solves  A X + X B + C = 0, i.e.
 // A X + X B = -C, and is backed by the very LAPACK dtrsyl routine scipy uses,
 // so results agree to machine precision. Pass C = -Q.
+// (Older Armadillo spelled this arma::syl(); that name is now deprecated.)
 
 // [[Rcpp::export]]
 arma::mat solve_sylvester_real(const arma::mat& A,
                                const arma::mat& B,
                                const arma::mat& Q) {
-  return arma::syl(A, B, -Q);
+  return arma::sylvester(A, B, -Q);
 }
 
-// Complex case: Armadillo's syl is real-only, so implement Bartels-Stewart
+// Complex case: Armadillo's sylvester is real-only, so implement Bartels-Stewart
 // directly.
 //   1. schur:  A = U R U^H,  R upper-triangular
 //   2. schur:  B = V S V^H,  S upper-triangular

@@ -1,4 +1,4 @@
-# scipy-independent checks: residual ||A X + X B - Q|| and known cases.
+# Self-contained checks: residual ||A X + X B - Q|| and known closed-form cases.
 
 residual <- function(A, B, Q, X) max(Mod(A %*% X + X %*% B - Q))
 

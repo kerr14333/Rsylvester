@@ -1,0 +1,12 @@
+# Build context lives at repo root; keep Windows artifacts out of the Linux image.
+.git
+docker/logs
+**/*.o
+**/*.so
+**/*.dll
+**/*.dylib
+**/*.Rcheck
+*.tar.gz
+.Rproj.user
+.Rhistory
+.RData

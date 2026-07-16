@@ -25,9 +25,9 @@ Or from a local clone:
 R CMD INSTALL .
 ```
 
-### Installing on different R versions (R ≥ 4.4)
+### Installing on different R versions (R ≥ 4.3)
 
-The package builds on any R ≥ 4.4. The **only** thing that changes between R
+The package builds on any R ≥ 4.3. The **only** thing that changes between R
 versions on Windows is the matching **Rtools** toolchain — everything else in the
 package is version-independent.
 
@@ -35,6 +35,7 @@ package is version-independent.
 |-----------|--------|----------|
 | 4.5.x | Rtools45 | <https://cran.r-project.org/bin/windows/Rtools/rtools45/> |
 | 4.4.x | Rtools44 | <https://cran.r-project.org/bin/windows/Rtools/rtools44/> |
+| 4.3.x | Rtools43 | <https://cran.r-project.org/bin/windows/Rtools/rtools43/> |
 
 Steps for a given R version:
 

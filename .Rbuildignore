@@ -1,3 +1,6 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
 ^README\.md$
+^docker$
+^\.dockerignore$
+^cran-comments\.md$

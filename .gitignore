@@ -14,6 +14,9 @@ src/symbols.rds
 ..Rcheck/
 *.tar.gz
 
+# Docker check logs
+docker/logs/
+
 # OS / editor
 .DS_Store
 Thumbs.db
