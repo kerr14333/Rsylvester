@@ -1,6 +1,12 @@
-# Link against whatever BLAS/LAPACK R itself is configured with (reference by
-# default, or OpenBLAS/MKL if the user swapped R's Rblas/Rlapack). This is the
-# standard, maximally portable setup -- no external dependencies, builds on any
-# R version. For faster linear algebra, point R at an optimized BLAS globally
-# (see README); every package, this one included, then benefits automatically.
-PKG_LIBS = $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS)
+# By default, link against whatever BLAS/LAPACK R itself is configured with
+# (reference by default). This is the standard, portable setup -- no external
+# dependencies, builds on any R version.
+#
+# To link an optimized BLAS instead (OpenBLAS/MKL) without touching R's install,
+# set SYLVESTER_BLAS at install time to the linker flags for it, e.g.
+#   PowerShell: $env:SYLVESTER_BLAS = "-LC:/OpenBLAS/lib -lopenblas"; R CMD INSTALL .
+#   R:          install.packages(".", repos = NULL, type = "source",
+#                 configure.vars = c(sylvester = "SYLVESTER_BLAS=-LC:/OpenBLAS/lib -lopenblas"))
+# The optimized BLAS DLL and its runtime deps must be on PATH when R loads the
+# package. Unset -> falls back to R's own BLAS. See README for details.
+PKG_LIBS = $(if $(SYLVESTER_BLAS),$(SYLVESTER_BLAS),$(LAPACK_LIBS) $(BLAS_LIBS)) $(FLIBS)

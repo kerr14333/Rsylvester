@@ -1,1 +1,5 @@
-PKG_LIBS = $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS)
+# Default: R's own BLAS/LAPACK. To link an optimized BLAS without touching R's
+# install, set SYLVESTER_BLAS at install time, e.g.
+#   SYLVESTER_BLAS="-L/opt/OpenBLAS/lib -lopenblas" R CMD INSTALL .
+# The optimized BLAS must be findable by the loader at runtime. See README.
+PKG_LIBS = $(if $(SYLVESTER_BLAS),$(SYLVESTER_BLAS),$(LAPACK_LIBS) $(BLAS_LIBS)) $(FLIBS)

@@ -128,10 +128,39 @@ The R manual covers this in detail: *R Installation and Administration*,
 §A.3 "Linear algebra" —
 <https://cran.r-project.org/doc/manuals/r-release/R-admin.html#Linear-algebra>.
 
-**On Windows**, R keeps its BLAS in `Rblas.dll` under `<R_HOME>\bin\x64\` (e.g.
+There are two ways to go about it: link an optimized BLAS into *this package
+alone* at build time (no admin, R left untouched), or swap R's BLAS globally.
+
+#### Option A: build this package against an optimized BLAS
+
+`Makevars` honors an optional `SYLVESTER_BLAS` variable — set it to the linker
+flags for your BLAS at install time, or leave it unset to use R's default.
+
+PowerShell:
+
+```powershell
+$env:SYLVESTER_BLAS = "-LC:/OpenBLAS/lib -lopenblas"
+R CMD INSTALL .
+```
+
+From R:
+
+```r
+install.packages(".", repos = NULL, type = "source",
+                 configure.vars = c(sylvester = "SYLVESTER_BLAS=-LC:/OpenBLAS/lib -lopenblas"))
+```
+
+The OpenBLAS `libopenblas.dll` and its runtime deps (`libgfortran`,
+`libgcc_s_seh`, `libquadmath`, `libwinpthread`) must be on `PATH` when R loads the
+package. Only this package uses the optimized BLAS; R core is unchanged. Unset
+the variable to fall back to R's own BLAS.
+
+#### Option B: swap R's BLAS globally (Windows)
+
+R keeps its BLAS in `Rblas.dll` under `<R_HOME>\bin\x64\` (e.g.
 `C:\Program Files\R\R-4.4.1\bin\x64\`). Replacing that file with an optimized
-build is all it takes. Since it lives under `Program Files`, run these from an
-Administrator shell:
+build speeds up all of R, this package included. Since it lives under
+`Program Files`, run these from an Administrator shell:
 
 1. Back up the originals:
    ```bat
