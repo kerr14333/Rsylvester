@@ -116,59 +116,51 @@ package — benefits, flipping the large-`n` result in R's favor:
 - Note: R's built-in reference LAPACK **cannot** multithread; parallelism comes
   only from swapping the BLAS.
 
-### BLAS vs. LAPACK (they are not alternatives)
+### Using an optimized BLAS
 
-LAPACK sits **on top of** BLAS. LAPACK does the high-level work (Schur
-decompositions, solves, factorizations) by calling BLAS for the low-level
-kernels (matrix multiply, etc.). You don't choose one *instead* of the other —
-you replace R's **reference BLAS** with an optimized one (OpenBLAS / MKL). Those
-ship a fast, multithreaded BLAS, and LAPACK gets faster automatically because it
-runs on top of it.
+A quick note on terms: LAPACK (Schur decompositions, solves, factorizations)
+runs on top of BLAS (matrix multiply and other kernels). So the thing to change
+is the BLAS — swap R's default reference BLAS for an optimized one like OpenBLAS
+or Intel MKL, and LAPACK speeds up along with it. This package uses whatever BLAS
+R is configured with, so no rebuild is needed after the swap.
 
-Official reference: *R Installation and Administration*, §A.3 "Linear algebra" —
+The R manual covers this in detail: *R Installation and Administration*,
+§A.3 "Linear algebra" —
 <https://cran.r-project.org/doc/manuals/r-release/R-admin.html#Linear-algebra>.
 
-#### Swapping R's BLAS on Windows
+**On Windows**, R keeps its BLAS in `Rblas.dll` under `<R_HOME>\bin\x64\` (e.g.
+`C:\Program Files\R\R-4.4.1\bin\x64\`). Replacing that file with an optimized
+build is all it takes. Since it lives under `Program Files`, run these from an
+Administrator shell:
 
-R loads two DLLs from `<R_HOME>\bin\x64\` (e.g.
-`C:\Program Files\R\R-4.4.1\bin\x64\`):
-
-- `Rblas.dll` — the BLAS (reference by default)
-- `Rlapack.dll` — the LAPACK
-
-Replace `Rblas.dll` with an optimized build and all of R — this package
-included — speeds up. That directory lives under `Program Files`, so use an
-**Administrator** shell.
-
-1. **Back up** the originals:
+1. Back up the originals:
    ```bat
    copy Rblas.dll   Rblas.dll.ref
    copy Rlapack.dll Rlapack.dll.ref
    ```
-2. Obtain an optimized `Rblas.dll`:
+2. Get an optimized `Rblas.dll`:
    - **OpenBLAS** — download a prebuilt Windows build from
      <https://github.com/OpenMathLib/OpenBLAS/releases> and rename its
-     `libopenblas.dll` to `Rblas.dll`. Ensure its runtime deps (`libgfortran`,
-     `libgcc_s_seh`, `libquadmath`, `libwinpthread`) are on `PATH` (Rtools' `bin`
-     dirs provide them).
-   - **Intel MKL** — point `Rblas.dll` at MKL's `mkl_rt`; heavier setup, usually
-     fastest on Intel CPUs.
+     `libopenblas.dll` to `Rblas.dll`. Its runtime deps (`libgfortran`,
+     `libgcc_s_seh`, `libquadmath`, `libwinpthread`) need to be on `PATH` —
+     Rtools' `bin` dirs provide them.
+   - **Intel MKL** — point `Rblas.dll` at MKL's `mkl_rt`; a bit more setup, and
+     usually the fastest option on Intel CPUs.
 3. Drop the new `Rblas.dll` into `bin\x64\` and restart R.
-4. **Verify**:
+4. Check it took effect:
    ```r
-   sessionInfo()   # BLAS / LAPACK paths are listed at the bottom
+   sessionInfo()   # BLAS / LAPACK paths appear at the bottom
    A <- matrix(rnorm(2000 * 2000), 2000)
-   system.time(A %*% A)   # should be much faster and use multiple cores
+   system.time(A %*% A)   # noticeably faster, and uses multiple cores
    ```
-5. **Revert** anytime by copying the `.ref` backups back over.
+5. To revert, copy the `.ref` backups back over.
 
-**Easier alternative — no file surgery:** install R through **conda** with an
-MKL-linked build (`conda install r-base` pulls MKL), or use an R distribution
-that already bundles OpenBLAS.
+If you'd rather not touch the R install, a couple of options avoid the swap
+entirely: install R through **conda** with an MKL-linked build
+(`conda install r-base`), or use an R distribution that already bundles OpenBLAS.
 
-The swap is **global**: every R session and package uses the new BLAS, which is
-exactly why it's the right lever — `sylvester` picks it up for free via
-`$(BLAS_LIBS)`, no rebuild needed.
+The change is global — every R session and package uses the new BLAS, so
+`sylvester` benefits automatically.
 
 ## License
 
