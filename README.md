@@ -116,6 +116,60 @@ package — benefits, flipping the large-`n` result in R's favor:
 - Note: R's built-in reference LAPACK **cannot** multithread; parallelism comes
   only from swapping the BLAS.
 
+### BLAS vs. LAPACK (they are not alternatives)
+
+LAPACK sits **on top of** BLAS. LAPACK does the high-level work (Schur
+decompositions, solves, factorizations) by calling BLAS for the low-level
+kernels (matrix multiply, etc.). You don't choose one *instead* of the other —
+you replace R's **reference BLAS** with an optimized one (OpenBLAS / MKL). Those
+ship a fast, multithreaded BLAS, and LAPACK gets faster automatically because it
+runs on top of it.
+
+Official reference: *R Installation and Administration*, §A.3 "Linear algebra" —
+<https://cran.r-project.org/doc/manuals/r-release/R-admin.html#Linear-algebra>.
+
+#### Swapping R's BLAS on Windows
+
+R loads two DLLs from `<R_HOME>\bin\x64\` (e.g.
+`C:\Program Files\R\R-4.4.1\bin\x64\`):
+
+- `Rblas.dll` — the BLAS (reference by default)
+- `Rlapack.dll` — the LAPACK
+
+Replace `Rblas.dll` with an optimized build and all of R — this package
+included — speeds up. That directory lives under `Program Files`, so use an
+**Administrator** shell.
+
+1. **Back up** the originals:
+   ```bat
+   copy Rblas.dll   Rblas.dll.ref
+   copy Rlapack.dll Rlapack.dll.ref
+   ```
+2. Obtain an optimized `Rblas.dll`:
+   - **OpenBLAS** — download a prebuilt Windows build from
+     <https://github.com/OpenMathLib/OpenBLAS/releases> and rename its
+     `libopenblas.dll` to `Rblas.dll`. Ensure its runtime deps (`libgfortran`,
+     `libgcc_s_seh`, `libquadmath`, `libwinpthread`) are on `PATH` (Rtools' `bin`
+     dirs provide them).
+   - **Intel MKL** — point `Rblas.dll` at MKL's `mkl_rt`; heavier setup, usually
+     fastest on Intel CPUs.
+3. Drop the new `Rblas.dll` into `bin\x64\` and restart R.
+4. **Verify**:
+   ```r
+   sessionInfo()   # BLAS / LAPACK paths are listed at the bottom
+   A <- matrix(rnorm(2000 * 2000), 2000)
+   system.time(A %*% A)   # should be much faster and use multiple cores
+   ```
+5. **Revert** anytime by copying the `.ref` backups back over.
+
+**Easier alternative — no file surgery:** install R through **conda** with an
+MKL-linked build (`conda install r-base` pulls MKL), or use an R distribution
+that already bundles OpenBLAS.
+
+The swap is **global**: every R session and package uses the new BLAS, which is
+exactly why it's the right lever — `sylvester` picks it up for free via
+`$(BLAS_LIBS)`, no rebuild needed.
+
 ## License
 
 MIT.
