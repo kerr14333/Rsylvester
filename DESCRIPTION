@@ -10,6 +10,7 @@ Description: Solves the Sylvester matrix equation A X + X B = Q for real or
     (Schur decomposition plus triangular back-substitution).
 License: MIT + file LICENSE
 Encoding: UTF-8
+Depends: R (>= 4.4.0)
 Imports: Rcpp
 LinkingTo: Rcpp, RcppArmadillo
 Suggests: testthat (>= 3.0.0), reticulate

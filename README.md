@@ -25,6 +25,34 @@ Or from a local clone:
 R CMD INSTALL .
 ```
 
+### Installing on different R versions (R ≥ 4.4)
+
+The package builds on any R ≥ 4.4. The **only** thing that changes between R
+versions on Windows is the matching **Rtools** toolchain — everything else in the
+package is version-independent.
+
+| R version | Rtools | download |
+|-----------|--------|----------|
+| 4.5.x | Rtools45 | <https://cran.r-project.org/bin/windows/Rtools/rtools45/> |
+| 4.4.x | Rtools44 | <https://cran.r-project.org/bin/windows/Rtools/rtools44/> |
+
+Steps for a given R version:
+
+1. Install that R version and its matching Rtools from the table above (R finds
+   Rtools automatically; no PATH setup needed for a standard install).
+2. Install the package: `remotes::install_github("kerr14333/Rsylvester")` (or
+   `R CMD INSTALL .` from a clone).
+
+That's the whole story for the default build. To build the **optimized-BLAS**
+variant instead, add the one `SYLVESTER_BLAS` environment variable at install
+time (see [Using an optimized BLAS](#using-an-optimized-blas)). The optimized
+BLAS itself (e.g. `C:\OpenBLAS`) is **shared across all R versions** — set it up
+once and every R version can link against it; only Rtools must match the R
+version.
+
+On **Linux/macOS** there's no Rtools step — a standard C/C++ compiler is enough,
+and the package links whatever BLAS your R already uses (often OpenBLAS already).
+
 ## Usage
 
 ```r
@@ -99,22 +127,32 @@ actually call it from R). Intel CPU, stock R 4.4.1 (reference BLAS), SciPy 1.18.
 - **Small/medium (n ≲ 100): this package is faster** — up to ~7× — because a
   native call avoids the Python-boundary (interpreter + array conversion) cost
   that dominates small problems.
-- **Large (n ≳ 200): Python is faster**, and it's the **BLAS, not the
-  algorithm**. SciPy bundles multithreaded, CPU-tuned **OpenBLAS**; stock R
-  ships single-threaded **reference** BLAS/LAPACK. `solve_sylvester` is
-  dominated by the two Schur decompositions, so the quality of the underlying
-  LAPACK/BLAS is what decides large-`n` speed.
+- **Large (n ≳ 200): Python is faster with stock R**, and it's the **BLAS, not
+  the algorithm**. SciPy bundles multithreaded, CPU-tuned **OpenBLAS**; stock R
+  ships single-threaded **reference** BLAS/LAPACK. `solve_sylvester` is dominated
+  by the two Schur decompositions, so the quality of the underlying LAPACK/BLAS
+  is what decides large-`n` speed. Fixable — see below.
 
-### Making it fast at every size
+### With an optimized BLAS
 
-This package links **whatever BLAS your R uses** (`$(BLAS_LIBS)`/`$(LAPACK_LIBS)`).
-Point R at an optimized BLAS once and *every* matrix operation — including this
-package — benefits, flipping the large-`n` result in R's favor:
+Building this package against a multithreaded **OpenBLAS** (official v0.3.33,
+DYNAMIC_ARCH; via `SYLVESTER_BLAS`, see below) closes the large-`n` gap and puts
+R ahead at every size on the same machine:
 
-- **OpenBLAS** or **Intel MKL** as a drop-in replacement for R's
-  `Rblas`/`Rlapack` (or a threaded-BLAS R build).
-- Note: R's built-in reference LAPACK **cannot** multithread; parallelism comes
-  only from swapping the BLAS.
+| n | `sylvester` + OpenBLAS (ms) | Python / reticulate (ms) | winner |
+|----:|--------------------------:|-------------------------:|:-------|
+| 5   | **0.039** | 0.231 | R **5.9×** |
+| 10  | **0.076** | 0.262 | R **3.4×** |
+| 25  | **0.359** | 0.563 | R **1.6×** |
+| 50  | **1.69**  | 1.94  | R 1.1× |
+| 100 | **11.9**  | 12.1  | R ~tie |
+| 200 | **57.0**  | 58.7  | R ~tie |
+| 400 | 295.6     | 294.7 | dead tie |
+
+Versus stock R that's roughly a **2× speedup at n = 200** (121 → 57 ms) and
+**n = 400** (804 → 296 ms) — enough to match or beat Python across the board.
+(Numbers depend on your CPU and OpenBLAS build; a well-threaded OpenBLAS or Intel
+MKL matters most at large `n`.)
 
 ### Using an optimized BLAS
 
@@ -154,6 +192,24 @@ The OpenBLAS `libopenblas.dll` and its runtime deps (`libgfortran`,
 `libgcc_s_seh`, `libquadmath`, `libwinpthread`) must be on `PATH` when R loads the
 package. Only this package uses the optimized BLAS; R core is unchanged. Unset
 the variable to fall back to R's own BLAS.
+
+**Getting a multithreaded OpenBLAS on Windows** (one-time, shared by every R
+version):
+
+1. Download the LP64 x64 build from
+   <https://github.com/OpenMathLib/OpenBLAS/releases> — e.g.
+   `OpenBLAS-0.3.33-x64.zip` (the plain `x64` one, **not** `x64-64`, which is
+   ILP64 and wrong for R).
+2. Extract to `C:\OpenBLAS` (giving `C:\OpenBLAS\{bin,lib,include}`).
+3. Add `C:\OpenBLAS\bin` to your PATH so the DLL loads at runtime:
+   ```powershell
+   [Environment]::SetEnvironmentVariable("Path",
+     [Environment]::GetEnvironmentVariable("Path","User") + ";C:\OpenBLAS\bin",
+     "User")
+   ```
+   The mingw runtime deps come from Rtools' `bin` (already on PATH for a normal
+   Rtools install). Restart your shell/R afterward.
+4. Install with `SYLVESTER_BLAS` set as shown above.
 
 #### Option B: swap R's BLAS globally (Windows)
 
