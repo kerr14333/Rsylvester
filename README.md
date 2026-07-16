@@ -93,15 +93,16 @@ triangular system is singular and an error is raised (matching SciPy's
 
 ## Correctness
 
-The test suite (`tests/testthat/`) checks, across 14 matrix shapes (square,
-tall, wide, `1×1`), for both real and complex inputs:
+The test suite (`tests/testthat/`) checks, across a range of matrix shapes
+(square, tall, wide, `1×1`), for both real and complex inputs:
 
-- **agreement with SciPy** — `scipy.linalg.solve_sylvester` is called in-process
-  via `reticulate` and compared to the R result (`max|X_R − X_py| < 1e-9`);
-- **residual sanity** — `‖A X + X B − Q‖ < 1e-8`, independent of SciPy.
+- **residual sanity** — `‖A X + X B − Q‖ < 1e-8`;
+- **known closed form** — the `1×1` scalar case `x = q / (a + b)`;
+- **input validation** — non-square `A`/`B` and mismatched `Q` shapes error.
 
-All **88** assertions pass. The SciPy comparison auto-skips if
-`reticulate`/`scipy` are unavailable, while the residual checks still run.
+The checks are self-contained (no external dependency). The agreement with
+`scipy.linalg.solve_sylvester` — which motivated the package — was verified
+during development; see the timing comparison below.
 
 ```r
 testthat::test_local(".")
