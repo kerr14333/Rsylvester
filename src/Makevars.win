@@ -1,0 +1,6 @@
+# Link against whatever BLAS/LAPACK R itself is configured with (reference by
+# default, or OpenBLAS/MKL if the user swapped R's Rblas/Rlapack). This is the
+# standard, maximally portable setup -- no external dependencies, builds on any
+# R version. For faster linear algebra, point R at an optimized BLAS globally
+# (see README); every package, this one included, then benefits automatically.
+PKG_LIBS = $(LAPACK_LIBS) $(BLAS_LIBS) $(FLIBS)

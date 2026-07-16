@@ -1,0 +1,16 @@
+Package: sylvester
+Type: Package
+Title: Solve Sylvester Matrix Equations via RcppArmadillo
+Version: 0.1.0
+Authors@R: person("cyg", "cyg", email = "cyg5005@gmail.com", role = c("aut", "cre"))
+Description: Solves the Sylvester matrix equation A X + X B = Q for real or
+    complex matrices, mirroring scipy.linalg.solve_sylvester. The real case
+    dispatches to Armadillo's LAPACK-backed solver (the same dtrsyl routine
+    scipy uses); the complex case uses a Bartels-Stewart implementation
+    (Schur decomposition plus triangular back-substitution).
+License: MIT + file LICENSE
+Encoding: UTF-8
+Imports: Rcpp
+LinkingTo: Rcpp, RcppArmadillo
+Suggests: testthat (>= 3.0.0), reticulate
+RoxygenNote: 7.3.1

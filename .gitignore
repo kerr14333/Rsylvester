@@ -1,0 +1,19 @@
+# Compiled objects / shared libs
+src/*.o
+src/*.so
+src/*.dll
+src/*.dylib
+src/symbols.rds
+
+# R build artifacts
+*.Rproj
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+..Rcheck/
+*.tar.gz
+
+# OS / editor
+.DS_Store
+Thumbs.db
